@@ -1,2 +1,2 @@
 # Hybrid-FDTD-ML-BoundarySolver
-Hybrid FDTD–machine learning framework for physics-constrained acoustic boundary modeling and wave propagation simulation.
+A collection of hybrid FDTD–machine methods for acoustic boundary modeling, including constrained neural boundary correction and transformer-based reflection coefficient prediction.
