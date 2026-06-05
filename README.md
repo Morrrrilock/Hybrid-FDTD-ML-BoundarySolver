@@ -8,8 +8,8 @@ Traditional FDTD simulations typically employ simplified boundary assumptions wi
 
 To address this limitation, this repository investigates two generations of hybrid FDTD–ML methods:
 
-- 1. A physics-constrained neural boundary predictor that directly estimates boundary pressure.
-- 2. An advanced Transformer-based reflection predictor that learns dynamic reflection coefficients using long-term temporal information.
+- 1.A physics-constrained neural boundary predictor that directly estimates boundary pressure.
+- 2.An advanced Transformer-based reflection predictor that learns dynamic reflection coefficients using long-term temporal information.
 
 Together, these models demonstrate the evolution from local boundary correction toward memory-aware and nonlinear boundary modeling.
 
