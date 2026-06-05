@@ -13,7 +13,7 @@ To address this limitation, this repository investigates two generations of hybr
 
 Together, these models demonstrate the evolution from local boundary correction toward memory-aware and nonlinear boundary modeling.
 
-# Method 1: Physics-Constrained Boundary Pressure Prediction
+# Method 1: Hybrid FDTD Physics-Constrained ML Boundary Solver
 
 The first-generation hybrid model focuses on learning the boundary pressure directly.
 
@@ -37,7 +37,8 @@ To maintain numerical stability, several physical constraints are imposed:
 This model successfully learns realistic boundary behavior and significantly improves local boundary prediction accuracy compared with simplified reflection models.
 
 However, the influence on the entire spatial pressure field remains limited because the model relies primarily on instantaneous local information and does not explicitly capture the accumulated effects of previous wave–boundary interactions.
-# Method 2: Transformer-Based Reflection Coefficient Prediction
+
+# Method 2: Hybrid FDTD Transformer-Based Boundary Solver
 
 The second-generation model extends the previous framework by introducing long-term memory and nonlinear boundary modeling.
 
