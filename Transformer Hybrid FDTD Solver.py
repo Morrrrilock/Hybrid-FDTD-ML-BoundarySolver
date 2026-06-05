@@ -3,13 +3,11 @@ import torch.nn as nn
 import torch.optim as optim
 import numpy as np
 import matplotlib
-
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import warnings
 from collections import deque
-import math
 
+matplotlib.use('Agg')
 warnings.filterwarnings('ignore')
 
 torch.manual_seed(42)
