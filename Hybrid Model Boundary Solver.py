@@ -3,15 +3,13 @@ import torch.nn as nn
 import torch.optim as optim
 import numpy as np
 import matplotlib
-
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import warnings
-from collections import deque
+
+matplotlib.use('Agg')
 
 warnings.filterwarnings('ignore')
 
-# Set random seeds
 torch.manual_seed(25)
 np.random.seed(25)
 
@@ -116,9 +114,6 @@ class ConstrainedBoundaryML(nn.Module):
         self.network = nn.Sequential(*layers)
 
     def forward(self, x):
-        """
-        x: [batch, 5] - [p_neighbor, p_prev_neighbor, gradient, t, freq_norm]
-        """
         # ML predicts correction factor (range [-1, 1])
         correction = torch.tanh(self.network(x))
 
@@ -250,15 +245,11 @@ class StableHybridSolver:
 
         with torch.no_grad():
             pred_normalized = self.ml_model(features)
-            pred = pred_normalized.item() * 5.0  # Denormalize
+            pred = pred_normalized.item() * 5.0
 
-        # Strong physical constraints
-        # 1. Boundary pressure cannot exceed the absolute value of incident pressure
         pred = np.clip(pred, -np.abs(p_neighbor), np.abs(p_neighbor))
-        # 2. Boundary pressure sign must match incident pressure (absorption boundary characteristic)
         if p_neighbor * pred < 0:
             pred = 0.3 * p_neighbor
-        # 3. Energy decay constraint
         if np.abs(pred) > 0.9 * np.abs(p_neighbor):
             pred = 0.85 * p_neighbor
 
@@ -295,8 +286,6 @@ class StableHybridSolver:
         return self.history
 
 
-# ==================== 6. Training function ====================
-
 def train_model():
     print("\n" + "=" * 60)
     print("Training ML boundary model with physical constraints")
@@ -330,7 +319,7 @@ def train_model():
     print("Starting training...")
     best_val_loss = float('inf')
 
-    for epoch in range(300):
+    for epoch in range(200):
         model.train()
         optimizer.zero_grad()
         output = model(X_train)
@@ -353,7 +342,7 @@ def train_model():
             torch.save(model.state_dict(), 'best_model.pth')
 
         if (epoch + 1) % 20 == 0:
-            print(f"Epoch {epoch + 1:3d}/300: Train Loss={loss.item():.9f}, Val Loss={val_loss.item():.9f}")
+            print(f"Epoch {epoch + 1:3d}/200: Train Loss={loss.item():.16f}, Val Loss={val_loss.item():.16f}")
 
     plt.figure(figsize=(10, 5))
     plt.plot(train_losses, label='Train Loss')
@@ -368,12 +357,11 @@ def train_model():
     plt.close()
 
     model.load_state_dict(torch.load('best_model.pth'))
-    print(f"\nBest model saved (validation loss: {best_val_loss:.9f})")
+    print(f"\nBest model saved (validation loss: {best_val_loss:.6f})")
 
     return model
 
 
-# ==================== 7. Comparison experiment ====================
 
 def comparison_experiment(ml_model):
     print("\n" + "=" * 60)
@@ -383,7 +371,6 @@ def comparison_experiment(ml_model):
     test_freq = 800
     test_amplitude = 8.0
 
-    # Real physical boundary
     print("\nRunning real physical boundary...")
     fdtd_true = BaseFDTD(nx=200, dx=0.01, c=343, cfl=0.5)
 
@@ -395,8 +382,6 @@ def comparison_experiment(ml_model):
 
     fdtd_true.boundary_condition = true_boundary
     history_true = fdtd_true.simulate(n_steps=600, record_every=10)
-
-    # Simplified physical boundary
     print("Running simplified physical boundary...")
     fdtd_simple = BaseFDTD(nx=200, dx=0.01, c=343, cfl=0.5)
 
@@ -409,14 +394,12 @@ def comparison_experiment(ml_model):
     fdtd_simple.boundary_condition = simple_boundary
     history_simple = fdtd_simple.simulate(n_steps=600, record_every=10)
 
-    # ML boundary
     print("Running ML boundary solver...")
     hybrid_solver = StableHybridSolver(nx=200, dx=0.01, c=343, cfl=0.5,
                                        ml_model=ml_model, use_ml=True)
     history_ml = hybrid_solver.simulate(n_steps=600, src_freq=test_freq,
                                         src_amplitude=test_amplitude, record_every=10)
 
-    # Calculate errors
     min_len = min(len(history_true), len(history_simple), len(history_ml))
 
     true_boundary_vals = [h['p_boundary_right'] for h in history_true[:min_len]]
@@ -431,12 +414,12 @@ def comparison_experiment(ml_model):
     print(f"  ML boundary:                 {mae_ml:.6f}")
     print(f"  Improvement:                 {(mae_simple - mae_ml) / mae_simple * 100:.1f}%")
 
-    # Visualization - Only 2x1 layout (Boundary Pressure and Boundary Error)
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
     times = [h['t'] for h in history_true[:min_len]]
 
-    # Plot 1: Boundary Pressure Comparison
+    # Figure 1: Boundary Pressure
     axes[0].plot(times, true_boundary_vals, 'k-', label='True', linewidth=2)
     axes[0].plot(times, simple_boundary_vals, 'r--', label='Simplified', alpha=0.7)
     axes[0].plot(times, ml_boundary_vals, 'b:', label='ML', alpha=0.7)
@@ -446,11 +429,11 @@ def comparison_experiment(ml_model):
     axes[0].legend()
     axes[0].grid(True, alpha=0.3)
 
-    # Plot 2: Boundary Error Comparison
+    # Figure 2: Boundary Error
     axes[1].plot(times, np.abs(np.array(true_boundary_vals) - np.array(simple_boundary_vals)),
-                 'r-', label='Simplified Error', alpha=0.7)
+                    'r-', label='Simplified Error', alpha=0.7)
     axes[1].plot(times, np.abs(np.array(true_boundary_vals) - np.array(ml_boundary_vals)),
-                 'b-', label='ML Error', alpha=0.7)
+                    'b-', label='ML Error', alpha=0.7)
     axes[1].set_xlabel('Time (s)')
     axes[1].set_ylabel('Absolute Error')
     axes[1].set_title('Boundary Error')
@@ -463,8 +446,6 @@ def comparison_experiment(ml_model):
 
     print("\nComparison plot saved: comparison_results.png")
 
-
-# ==================== 8. Main program ====================
 
 def main():
     print("=" * 60)
