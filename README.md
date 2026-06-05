@@ -60,7 +60,7 @@ The model incorporates:
 - 8-head self-attention
 - 30-step history window
 - Approximately 2.5 million trainable parameters
-- 
+
 Unlike the first-generation model, which primarily relies on instantaneous local information, the Transformer-based approach explicitly incorporates historical boundary states through a memory window. This enables the network to capture delayed reflections and accumulated wave–boundary interactions that cannot be represented by local features alone.
 
 The self-attention mechanism further allows the model to identify relationships between distant temporal states and extract global temporal patterns from the boundary history. In addition, the deep nonlinear architecture provides a more flexible representation of frequency-dependent and amplitude-dependent boundary behavior.
